@@ -5,7 +5,9 @@ import {
   View,
   FlatList,
   TouchableWithoutFeedback,
-  ScrollView
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView
 } from "react-native";
 import * as firebaseApp from "firebase";
 import {
@@ -19,32 +21,58 @@ import {
 } from "react-native-paper";
 import * as firebaseconfig from "./firebase.config";
 
+import * as languageCode from "./languageCode";
+
 import { Platform } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-export default class App extends React.Component {
+import ISO6391 from "iso-639-1";
 
+import shortid from "shortid";
+
+import {
+  Autocomplete,
+  withKeyboardAwareScrollView
+} from "react-native-dropdown-autocomplete";
+
+
+
+class App extends React.Component {
   constructor(props) {
     super(props);
-    
 
     if (!firebaseApp.apps.length) {
       firebaseApp.initializeApp(firebaseconfig.Config);
     }
     this.tasksRef = firebaseApp.database().ref("/items");
-    
+
     const dataSource = [];
     this.state = {
       dataSource: dataSource,
       selecteditem: null,
       snackbarVisible: false,
-      confirmVisible: false
+      confirmVisible: false,
+      languages: [],      
     };
   }
   componentDidMount() {
     // start listening for firebase updates
     this.listenForTasks(this.tasksRef);
+    this.loadLanguages();
+    //let l = ISO6391.getNativeName("ur");
+    //this.setState({ languages: l });
+    //console.log(l);
+  }
+
+  async loadLanguages() {
+    //const translate = new Translate();
+    //const [languages] = await translate.getLanguages();
+    //const languageCodes=languageCode.codes;
+    console.log("Languages:");
+    const languages=ISO6391.getLanguages(languageCode.codes);
+    this.setState({languages : languages })
+    console.log(languages);
   }
 
   listenForTasks(tasksRef) {
@@ -87,7 +115,7 @@ export default class App extends React.Component {
     return firebaseApp
       .database()
       .ref()
-      .update(updates);   
+      .update(updates);
   }
 
   addItem(itemName) {
@@ -97,7 +125,6 @@ export default class App extends React.Component {
       .child("items")
       .push().key;
 
-   
     var updates = {};
     updates["/items/" + newPostKey] = {
       name:
@@ -109,11 +136,10 @@ export default class App extends React.Component {
     return firebaseApp
       .database()
       .ref()
-      .update(updates);    
+      .update(updates);
   }
 
   updateItem() {
-    
     var updates = {};
     updates["/items/" + this.state.selecteditem.key] = {
       name: this.state.itemname
@@ -122,7 +148,7 @@ export default class App extends React.Component {
     return firebaseApp
       .database()
       .ref()
-      .update(updates);   
+      .update(updates);
   }
 
   saveItem() {
@@ -140,6 +166,7 @@ export default class App extends React.Component {
       });
     }
   }
+  
 
   showDialog() {
     this.setState({ confirmVisible: true });
@@ -149,27 +176,71 @@ export default class App extends React.Component {
   undoDeleteItem() {
     this.addItem(this.state.deleteItem.name);
   }
-  
+
+  handleSelectItem(item, index) {
+    const { onDropdownClose } = this.props;
+    onDropdownClose();
+    console.log(item);
+  }
 
   render() {
+    const autocompletes = [...Array(10).keys()];
+    const data = [
+      "Apples",
+      "Broccoli",
+      "Chicken",
+      "Duck",
+      "Eggs",
+      "Fish",
+      "Granola",
+      "Hash Browns",
+      "Apples1",
+      "Apples2",
+      "Apples3"
+    ];
+    //const { query } = this.state.query;
+    //data = this._filterData(query)
+    const { scrollToInput, onDropdownClose, onDropdownShow } = this.props;
     return (
       <PaperProvider>
         <View style={styles.container}>
+          <View style={styles.autocompletesContainer}>
+            <SafeAreaView>
+              <Autocomplete
+                key={shortid.generate()}
+                style={styles.input}
+                scrollToInput={ev => scrollToInput(ev)}
+                handleSelectItem={(item, id) => this.handleSelectItem(item, id)}
+                onDropdownClose={() => onDropdownClose()}
+                onDropdownShow={() => onDropdownShow()}
+                renderIcon={() => <View />}
+                data={this.state.languages}                
+                minimumCharactersCount={2}
+                highlightText
+                valueExtractor={item => item.name + ' ' + item.nativeName}
+                rightContent
+                rightTextExtractor={item => item.code}
+                placeholder="Language"
+              />
+            </SafeAreaView>
+          </View>
+          <View />
+
           <ScrollView>
-            <Text>City list from firebase</Text>
+            <Text>list from firebase</Text>
             <TextInput
-              label="City"
+              label="Type something"
               style={{
                 height: 50,
                 width: 250,
                 borderColor: "gray",
-                borderWidth: 1                
+                borderWidth: 1
               }}
               onChangeText={text => this.setState({ itemname: text })}
               value={this.state.itemname}
-            />  
-            <View style={{height:10}}></View>          
-            <Button 
+            />
+            <View style={{ height: 10 }} />
+            <Button
               icon={this.state.selecteditem === null ? "add" : "update"}
               mode="contained"
               onPress={() => this.saveItem()}
@@ -210,7 +281,6 @@ export default class App extends React.Component {
             />
             <Text />
 
-            
             <Portal>
               <Dialog
                 visible={this.state.confirmVisible}
@@ -246,6 +316,8 @@ export default class App extends React.Component {
   }
 }
 
+export default withKeyboardAwareScrollView(App);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -258,5 +330,36 @@ const styles = StyleSheet.create({
     fontSize: 18,
     height: 44,
     alignItems: "center"
+  },
+  autocompletesContainer: {
+    paddingTop: 0,
+    zIndex: 1,
+    width: "100%",
+    paddingHorizontal: 8
+  },
+  input: { maxHeight: 40 },
+  inputContainer: {
+    display: "flex",
+    flexShrink: 0,
+    flexGrow: 0,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderColor: "#c7c6c1",
+    paddingVertical: 13,
+    paddingLeft: 12,
+    paddingRight: "5%",
+    width: "100%",
+    justifyContent: "flex-start"
+  },
+  // container: {
+  //   flex: 1,
+  //   backgroundColor: "#ffffff",
+  // },
+  plus: {
+    position: "absolute",
+    left: 15,
+    top: 10
   }
 });
