@@ -6,3 +6,4 @@ npm-debug.*
 *.key
 *.mobileprovision
 firebase.config.js
+translate.config.js

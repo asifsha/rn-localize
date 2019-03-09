@@ -6,16 +6,19 @@
     "ios": "expo start --ios",
     "eject": "expo eject"
   },
-  "dependencies": {    
+  "dependencies": {
     "expo": "^32.0.0",
     "firebase": "^5.8.3",
     "google-translate-api": "^2.3.0",
     "iso-639-1": "^2.0.3",
+    "querystring": "^0.2.0",
     "react": "16.5.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
     "react-native-dropdown-autocomplete": "^1.0.10",
     "react-native-paper": "^2.11.1",
-    "shortid": "^2.2.14"
+    "react-native-power-translator": "^1.1.1",
+    "shortid": "^2.2.14",
+    "vm": "^0.1.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^5.0.0"

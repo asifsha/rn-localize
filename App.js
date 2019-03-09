@@ -20,6 +20,7 @@ import {
   Provider as PaperProvider
 } from "react-native-paper";
 import * as firebaseconfig from "./firebase.config";
+import * as translateConfig from "./translate.config";
 
 import * as languageCode from "./languageCode";
 
@@ -36,9 +37,13 @@ import {
   withKeyboardAwareScrollView
 } from "react-native-dropdown-autocomplete";
 
+import { PowerTranslator, ProviderTypes, TranslatorConfiguration, TranslatorFactory } from 'react-native-power-translator';
+
 
 
 class App extends React.Component {
+
+  
   constructor(props) {
     super(props);
 
@@ -54,21 +59,29 @@ class App extends React.Component {
       snackbarVisible: false,
       confirmVisible: false,
       languages: [],      
+      addtext:'Add',
+      updatetext:'Update',
+      yesText:'Yes',
+      noText:'No',
+      confirmDialogtext : 'Are you sure you want to delete this?',
+      undoText:'Undo',
+      itemDeletedSuccessfullyText:'Item deleted successfully.',
+      dataFromFireBaseText:'Data from Firebase',
+      typeSomethingText:'Type Something',
+      confirmText:'Confirm',
+      selectLanguageText:'Select Language'
     };
   }
   componentDidMount() {
+    TranslatorConfiguration.setConfig(ProviderTypes.Google, translateConfig.Config.key,'fr');
     // start listening for firebase updates
     this.listenForTasks(this.tasksRef);
     this.loadLanguages();
-    //let l = ISO6391.getNativeName("ur");
-    //this.setState({ languages: l });
-    //console.log(l);
+    
   }
 
   async loadLanguages() {
-    //const translate = new Translate();
-    //const [languages] = await translate.getLanguages();
-    //const languageCodes=languageCode.codes;
+   
     console.log("Languages:");
     const languages=ISO6391.getLanguages(languageCode.codes);
     this.setState({languages : languages })
@@ -170,7 +183,7 @@ class App extends React.Component {
 
   showDialog() {
     this.setState({ confirmVisible: true });
-    console.log("in show dialog");
+    
   }
 
   undoDeleteItem() {
@@ -181,6 +194,13 @@ class App extends React.Component {
     const { onDropdownClose } = this.props;
     onDropdownClose();
     console.log(item);
+    TranslatorConfiguration.setConfig(ProviderTypes.Google, translateConfig.Config.key,item.code);
+    const translator = TranslatorFactory.createTranslator();
+    translator.translate('Engineering physics or engineering science').then(translated => {
+      //Do something with the translated text
+      setState({itemtext: translated});
+  });
+
   }
 
   render() {
@@ -220,16 +240,16 @@ class App extends React.Component {
                 valueExtractor={item => item.name + ' ' + item.nativeName}
                 rightContent
                 rightTextExtractor={item => item.code}
-                placeholder="Language"
+                placeholder={this.state.selectLanguageText}
               />
             </SafeAreaView>
           </View>
           <View />
 
           <ScrollView>
-            <Text>list from firebase</Text>
+            <Text>{this.state.dataFromFireBaseText}</Text>
             <TextInput
-              label="Type something"
+              label={this.state.typeSomethingText}
               style={{
                 height: 50,
                 width: 250,
@@ -245,7 +265,7 @@ class App extends React.Component {
               mode="contained"
               onPress={() => this.saveItem()}
             >
-              {this.state.selecteditem === null ? "add" : "update"}
+              {this.state.selecteditem === null ? this.state.addtext : this.state.updatetext}
             </Button>
             <FlatList
               data={this.state.dataSource}
@@ -286,13 +306,13 @@ class App extends React.Component {
                 visible={this.state.confirmVisible}
                 onDismiss={() => this.hideDialog(false)}
               >
-                <Dialog.Title>Confirm</Dialog.Title>
+                <Dialog.Title>{this.state.confirmText}</Dialog.Title>
                 <Dialog.Content>
-                  <Paragraph>Are you sure you want to delete this?</Paragraph>
+                  <Paragraph>{this.state.confirmDialogtext}</Paragraph>
                 </Dialog.Content>
                 <Dialog.Actions>
-                  <Button onPress={() => this.hideDialog(true)}>Yes</Button>
-                  <Button onPress={() => this.hideDialog(false)}>No</Button>
+                  <Button onPress={() => this.hideDialog(true)}>{this.state.yesText}</Button>
+                  <Button onPress={() => this.hideDialog(false)}>{this.state.noText}</Button>
                 </Dialog.Actions>
               </Dialog>
             </Portal>
@@ -301,14 +321,14 @@ class App extends React.Component {
             visible={this.state.snackbarVisible}
             onDismiss={() => this.setState({ snackbarVisible: false })}
             action={{
-              label: "Undo",
+              label: this.state.undoText,
               onPress: () => {
                 // Do something
                 this.undoDeleteItem();
               }
             }}
           >
-            Item deleted successfully.
+            {this.state.itemDeletedSuccessfullyText}
           </Snackbar>
         </View>
       </PaperProvider>
