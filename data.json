@@ -1,0 +1,25 @@
+{
+  "responseData": { "translatedText": "Ciao Mondo!", "match": 1 },
+  "quotaFinished": false,
+  "mtLangSupported": null,
+  "responseDetails": "",
+  "responseStatus": 200,
+  "responderId": "233",
+  "exception_code": null,
+  "matches": [
+    {
+      "id": "586685268",
+      "segment": "Hello World!",
+      "translation": "Ciao Mondo!",
+      "quality": "74",
+      "reference": null,
+      "usage-count": 97,
+      "subject": "All",
+      "created-by": "MateCat",
+      "last-updated-by": "MateCat",
+      "create-date": "2019-03-09 19:16:23",
+      "last-update-date": "2019-03-09 19:16:23",
+      "match": 1
+    }
+  ]
+}
