@@ -37,13 +37,7 @@ import {
   withKeyboardAwareScrollView
 } from "react-native-dropdown-autocomplete";
 
-
-
-
-
 class App extends React.Component {
-
-  
   constructor(props) {
     super(props);
 
@@ -58,49 +52,56 @@ class App extends React.Component {
       selecteditem: null,
       snackbarVisible: false,
       confirmVisible: false,
-      languages: [],      
-      addText:'Add',
-      updateText:'Update',
-      yesText:'Yes',
-      noText:'No',
-      confirmDialogtext : 'Are you sure you want to delete this?',
-      undoText:'Undo',
-      itemDeletedSuccessfullyText:'Item deleted successfully.',
-      dataFromFireBaseText:'Data from Firebase',
-      typeSomethingText:'Type Something',
-      confirmText:'Confirm',
-      selectLanguageText:'Select Language',
-      lastLanguageCode:'en'
+      languages: [],
+      addText: "Add",
+      updateText: "Update",
+      yesText: "Yes",
+      noText: "No",
+      confirmDialogtext: "Are you sure you want to delete this?",
+      undoText: "Undo",
+      itemDeletedSuccessfullyText: "Item deleted successfully.",
+      dataFromFireBaseText: "Data from Firebase",
+      typeSomethingText: "Type Something",
+      confirmText: "Confirm",
+      selectLanguageText: "Select Language",
+      lastLanguageCode: "en"
     };
   }
   componentDidMount() {
-    
     // start listening for firebase updates
-    this.listenForTasks(this.tasksRef);
+    this.listenForTasks(this.tasksRef, "", "");
     this.loadLanguages();
-    
   }
 
   async loadLanguages() {
-   
     console.log("Languages:");
-    const languages=ISO6391.getLanguages(languageCode.codes);
-    this.setState({languages : languages })
+    const languages = ISO6391.getLanguages(languageCode.codes);
+    this.setState({ languages: languages });
     //console.log(languages);
   }
 
-  listenForTasks(tasksRef) {
+  listenForTasks(tasksRef, sourceLang, targetLang) {
     tasksRef.on("value", dataSnapshot => {
-      var tasks = [];
-      dataSnapshot.forEach(child => {
-        tasks.push({
-          name: child.val().name,
-          key: child.key
-        });
-      });
+      this.setState({ dataSource: [] });
+      //var tasks = [];
+      // var counter=0;
 
-      this.setState({
-        dataSource: tasks
+      dataSnapshot.forEach(child => {
+        this.translate(child.val().name, sourceLang, targetLang).then(res => {
+          console.log(res);
+
+          const oldItems = [...this.state.dataSource];
+          oldItems.push({
+            name: res,
+            key: child.key
+          });
+
+          this.setState({
+            dataSource: oldItems
+          });
+
+          console.log(oldItems);
+        });
       });
     });
   }
@@ -180,11 +181,9 @@ class App extends React.Component {
       });
     }
   }
-  
 
   showDialog() {
     this.setState({ confirmVisible: true });
-    
   }
 
   undoDeleteItem() {
@@ -195,23 +194,47 @@ class App extends React.Component {
     const { onDropdownClose } = this.props;
     onDropdownClose();
     console.log(item);
-    const lastCode=this.state.lastLanguageCode;
-   this.translate(this.state.yesText,lastCode,item.code ).then(res=> this.setState({yesText:res}));
-   this.translate(this.state.noText,lastCode,item.code ).then(res=> this.setState({noText:res}));
-   this.translate(this.state.addText,lastCode,item.code ).then(res=> this.setState({addText:res}));
-   this.translate(this.state.updateText,lastCode,item.code).then(res=> this.setState({updateText:res}));
-   this.translate(this.state.typeSomethingText,lastCode,item.code ).then(res=> this.setState({typeSomethingText:res}));
-   this.translate(this.state.confirmDialogtext,lastCode,item.code ).then(res=> this.setState({confirmDialogtext:res}));
+    const lastCode = this.state.lastLanguageCode;
+    this.translate(this.state.yesText, lastCode, item.code).then(res =>
+      this.setState({ yesText: res })
+    );
+    this.translate(this.state.noText, lastCode, item.code).then(res =>
+      this.setState({ noText: res })
+    );
+    this.translate(this.state.addText, lastCode, item.code).then(res =>
+      this.setState({ addText: res })
+    );
+    this.translate(this.state.updateText, lastCode, item.code).then(res =>
+      this.setState({ updateText: res })
+    );
+    this.translate(this.state.typeSomethingText, lastCode, item.code).then(
+      res => this.setState({ typeSomethingText: res })
+    );
+    this.translate(this.state.confirmDialogtext, lastCode, item.code).then(
+      res => this.setState({ confirmDialogtext: res })
+    );
 
-    this.translate(this.state.undoText,lastCode,item.code ).then(res=> this.setState({undoText:res}));
-    this.translate(this.state.itemDeletedSuccessfullyText,lastCode,item.code ).then(res=> this.setState({itemDeletedSuccessfullyText:res}));
-    this.translate(this.state.dataFromFireBaseText,lastCode,item.code ).then(res=> this.setState({dataFromFireBaseText:res}));
-    this.translate(this.state.confirmText,lastCode,item.code ).then(res=> this.setState({confirmText:res}));
-    this.translate(this.state.selectLanguageText,lastCode,item.code ).then(res=> this.setState({selectLanguageText:res}));
+    this.translate(this.state.undoText, lastCode, item.code).then(res =>
+      this.setState({ undoText: res })
+    );
+    this.translate(
+      this.state.itemDeletedSuccessfullyText,
+      lastCode,
+      item.code
+    ).then(res => this.setState({ itemDeletedSuccessfullyText: res }));
+    this.translate(this.state.dataFromFireBaseText, lastCode, item.code).then(
+      res => this.setState({ dataFromFireBaseText: res })
+    );
+    this.translate(this.state.confirmText, lastCode, item.code).then(res =>
+      this.setState({ confirmText: res })
+    );
+    this.translate(this.state.selectLanguageText, lastCode, item.code).then(
+      res => this.setState({ selectLanguageText: res })
+    );
+    this.listenForTasks(this.tasksRef, lastCode, item.code);
+    this.setState({ lastLanguageCode: item.code });
+    console.log(item);
 
-    this.setState({lastLanguageCode:item.code});
-  console.log(item);
-  
     //console.log('after translate');
     //console.log(updateText);
     // this.setState({
@@ -222,27 +245,27 @@ class App extends React.Component {
     // })
   }
 
-   translate(text, sourceCode,targetCode){
-    let url=`https://api.mymemory.translated.net/get?q=${text}&langpair=${sourceCode}|${targetCode}`;
+  translate(text, sourceCode, targetCode) {
+    let url = `https://api.mymemory.translated.net/get?q=${text}&langpair=${sourceCode}|${targetCode}`;
 
-    return new Promise((resolve, reject) => { 
-    
+    return new Promise((resolve, reject) => {
+      if(sourceCode==='' || targetCode==='')
+      {resolve(text);
+      return;
+      }
       fetch(url, {
-        method: 'GET'
-      }).then(response => response.json())
-        .then(function(data) 
-        { 
-                   
+        method: "GET"
+      })
+        .then(response => response.json())
+        .then(function(data) {
+          console.log(data);
           resolve(data.matches[0].translation);
-           
         })
-        .catch(function (error) {
-          console.error('Error:', error);
+        .catch(function(error) {
+          console.error("Error:", error);
           reject(error);
-          
         });
-      });
-
+    });
   }
 
   render() {
@@ -276,10 +299,10 @@ class App extends React.Component {
                 onDropdownClose={() => onDropdownClose()}
                 onDropdownShow={() => onDropdownShow()}
                 renderIcon={() => <View />}
-                data={this.state.languages}                
+                data={this.state.languages}
                 minimumCharactersCount={2}
                 highlightText
-                valueExtractor={item => item.name + ' ' + item.nativeName}
+                valueExtractor={item => item.name + " " + item.nativeName}
                 rightContent
                 rightTextExtractor={item => item.code}
                 placeholder={this.state.selectLanguageText}
@@ -307,7 +330,9 @@ class App extends React.Component {
               mode="contained"
               onPress={() => this.saveItem()}
             >
-              {this.state.selecteditem === null ? this.state.addText : this.state.updateText}
+              {this.state.selecteditem === null
+                ? this.state.addText
+                : this.state.updateText}
             </Button>
             <FlatList
               data={this.state.dataSource}
@@ -353,8 +378,12 @@ class App extends React.Component {
                   <Paragraph>{this.state.confirmDialogtext}</Paragraph>
                 </Dialog.Content>
                 <Dialog.Actions>
-                  <Button onPress={() => this.hideDialog(true)}>{this.state.yesText}</Button>
-                  <Button onPress={() => this.hideDialog(false)}>{this.state.noText}</Button>
+                  <Button onPress={() => this.hideDialog(true)}>
+                    {this.state.yesText}
+                  </Button>
+                  <Button onPress={() => this.hideDialog(false)}>
+                    {this.state.noText}
+                  </Button>
                 </Dialog.Actions>
               </Dialog>
             </Portal>
