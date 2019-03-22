@@ -252,7 +252,7 @@ class App extends React.Component {
     );
     this.listenForTasks(this.tasksRef, lastCode, item.code);
     this.setState({ lastLanguageCode: item.code });
-    this.setState({ isLoading: false });
+    //this.setState({ isLoading: false });
     
   }
   translate2(text, sourceCode, targetCode) {
