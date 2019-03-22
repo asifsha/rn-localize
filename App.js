@@ -6,7 +6,7 @@ import {
   FlatList,
   TouchableWithoutFeedback,
   ScrollView,
-  TouchableOpacity,
+  ActivityIndicator,
   SafeAreaView
 } from "react-native";
 import * as firebaseApp from "firebase";
@@ -64,7 +64,9 @@ class App extends React.Component {
       typeSomethingText: "Type Something",
       confirmText: "Confirm",
       selectLanguageText: "Select Language",
-      lastLanguageCode: "en"
+      lastLanguageCode: "en",
+      isLoading:false
+
     };
   }
   componentDidMount() {
@@ -74,7 +76,7 @@ class App extends React.Component {
   }
 
   async loadLanguages() {
-    console.log("Languages:");
+    //console.log("Languages:");
     const languages = ISO6391.getLanguages(languageCode.codes);
     this.setState({ languages: languages });
     //console.log(languages);
@@ -82,29 +84,100 @@ class App extends React.Component {
 
   listenForTasks(tasksRef, sourceLang, targetLang) {
     tasksRef.on("value", dataSnapshot => {
-      this.setState({ dataSource: [] });
+      this.setState({ dataSource: [], isLoading : true });
+
+      console.log("in load");
       //var tasks = [];
       // var counter=0;
+      const oldItems = [];
+      // let data = dataSnapshot.val();
+      // let items = Object.values(data);
+      // this.setState({dataSource : items});
 
+      //console.log(items);
+      //console.log(dataSnapshot);
+
+      // dataSnapshot.forEach(child => {
+      //   this.translate2(child.val().name, sourceLang, targetLang).then(res => {
+      //    // console.log(res);
+      //    console.log('in get data');
+      //     const oldItems = [...this.state.dataSource];
+
+      //     if(oldItems.find(x=> x.key===child.key) === undefined)
+      //     {
+      //     oldItems.push({
+      //       name: res,
+      //       key: child.key
+      //     });
+      //   }
+      //     this.setState({
+      //       dataSource: oldItems
+      //     });
+
+      //     console.log(oldItems.length);
+      //     console.log(this.state.dataSource.length);
+      //   });
+      // });
+ let dbsnap=[];
       dataSnapshot.forEach(child => {
-        this.translate(child.val().name, sourceLang, targetLang).then(res => {
-          console.log(res);
-
-          const oldItems = [...this.state.dataSource];
-          oldItems.push({
-            name: res,
-            key: child.key
-          });
-
-          this.setState({
-            dataSource: oldItems
-          });
-
-          console.log(oldItems);
-        });
+        dbsnap.push({key: child.key,value:child.val().name});
       });
+
+      console.log(dbsnap);
+      // this.start(dataSnapshot, oldItems);
+      const arr=[1,2,3];
+      let arr1=[];
+      this.example(dbsnap,oldItems, sourceLang, targetLang).then(() => {
+        console.log('done');
+        console.log(oldItems);
+        this.setState({
+              dataSource: oldItems , isLoading : false
+            });
+      })
     });
   }
+
+ example = async (dataSnapshot,oldItems,sourceLang,targetLang) => {
+    //const nums = array;
+    for (const child of dataSnapshot) {
+     const result =
+     await this.translate2(child.value,sourceLang, targetLang);
+     //await returnNum(1);
+     console.log(result);
+    console.log(child);
+     oldItems.push({
+            name: result,
+            key: child.key
+          });
+    }
+    console.log('after forEach');
+    
+  }
+  
+   
+  
+  
+
+  //  start = async (dataSnapshot, oldItems, sourceLang, targetLang) => {
+  //   await this.asyncForEach(dataSnapshot, async (child,sourceLang, targetLang) => {
+  //    let res= await this.translate2(child.val().name, sourceLang, targetLang);
+  //     oldItems.push({
+  //       name: res,
+  //       key: child.key
+  //     });
+  //     console.log(res);
+  //   });
+  //   console.log("Done");
+  //   this.setState({
+  //     dataSource: oldItems
+  //   });
+  // };
+
+  // async asyncForEach(array, callback) {
+  //   for (let index = 0; index < array.length; index++) {
+  //     await callback(array[index], index, array);
+  //   }
+  // }
 
   renderSeparator = () => {
     return (
@@ -134,6 +207,10 @@ class App extends React.Component {
   }
 
   addItem(itemName) {
+    this.setState({
+      dataSource: []
+    });
+
     var newPostKey = firebaseApp
       .database()
       .ref()
@@ -148,10 +225,12 @@ class App extends React.Component {
           : itemName
     };
 
-    return firebaseApp
+    firebaseApp
       .database()
       .ref()
       .update(updates);
+    
+    return;
   }
 
   updateItem() {
@@ -191,40 +270,41 @@ class App extends React.Component {
   }
 
   handleSelectItem(item, index) {
+    this.setState({isLoading:true});
     const { onDropdownClose } = this.props;
     onDropdownClose();
-    console.log(item);
+    //console.log(item);
     const lastCode = this.state.lastLanguageCode;
-    this.translate(this.state.yesText, lastCode, item.code).then(res =>
-      this.setState({ yesText: res })
-    );
-    this.translate(this.state.noText, lastCode, item.code).then(res =>
-      this.setState({ noText: res })
-    );
-    this.translate(this.state.addText, lastCode, item.code).then(res =>
-      this.setState({ addText: res })
-    );
-    this.translate(this.state.updateText, lastCode, item.code).then(res =>
-      this.setState({ updateText: res })
-    );
-    this.translate(this.state.typeSomethingText, lastCode, item.code).then(
-      res => this.setState({ typeSomethingText: res })
-    );
-    this.translate(this.state.confirmDialogtext, lastCode, item.code).then(
-      res => this.setState({ confirmDialogtext: res })
-    );
+    // this.translate(this.state.yesText, lastCode, item.code).then(res =>
+    //   this.setState({ yesText: res })
+    // );
+    // this.translate(this.state.noText, lastCode, item.code).then(res =>
+    //   this.setState({ noText: res })
+    // );
+    // this.translate(this.state.addText, lastCode, item.code).then(res =>
+    //   this.setState({ addText: res })
+    // );
+    // this.translate(this.state.updateText, lastCode, item.code).then(res =>
+    //   this.setState({ updateText: res })
+    // );
+    // this.translate(this.state.typeSomethingText, lastCode, item.code).then(
+    //   res => this.setState({ typeSomethingText: res })
+    // );
+    // this.translate(this.state.confirmDialogtext, lastCode, item.code).then(
+    //   res => this.setState({ confirmDialogtext: res })
+    // );
 
-    this.translate(this.state.undoText, lastCode, item.code).then(res =>
-      this.setState({ undoText: res })
-    );
-    this.translate(
-      this.state.itemDeletedSuccessfullyText,
-      lastCode,
-      item.code
-    ).then(res => this.setState({ itemDeletedSuccessfullyText: res }));
-    this.translate(this.state.dataFromFireBaseText, lastCode, item.code).then(
-      res => this.setState({ dataFromFireBaseText: res })
-    );
+    // this.translate(this.state.undoText, lastCode, item.code).then(res =>
+    //   this.setState({ undoText: res })
+    // );
+    // this.translate(
+    //   this.state.itemDeletedSuccessfullyText,
+    //   lastCode,
+    //   item.code
+    // ).then(res => this.setState({ itemDeletedSuccessfullyText: res }));
+    // this.translate(this.state.dataFromFireBaseText, lastCode, item.code).then(
+    //   res => this.setState({ dataFromFireBaseText: res })
+    // );
     this.translate(this.state.confirmText, lastCode, item.code).then(res =>
       this.setState({ confirmText: res })
     );
@@ -233,7 +313,8 @@ class App extends React.Component {
     );
     this.listenForTasks(this.tasksRef, lastCode, item.code);
     this.setState({ lastLanguageCode: item.code });
-    console.log(item);
+    this.setState({isLoading:false});
+    //console.log(item);
 
     //console.log('after translate');
     //console.log(updateText);
@@ -244,21 +325,27 @@ class App extends React.Component {
     //   updateText:updateText
     // })
   }
-
+  translate2(text, sourceCode, targetCode) {
+    return new Promise((resolve, reject) => {
+      setTimeout(function() {
+        resolve(text + "foo");
+      }, 1000);
+    });
+  }
   translate(text, sourceCode, targetCode) {
     let url = `https://api.mymemory.translated.net/get?q=${text}&langpair=${sourceCode}|${targetCode}`;
 
     return new Promise((resolve, reject) => {
-      if(sourceCode==='' || targetCode==='')
-      {resolve(text);
-      return;
+      if (sourceCode === "" || targetCode === "") {
+        resolve(text);
+        return;
       }
       fetch(url, {
         method: "GET"
       })
         .then(response => response.json())
         .then(function(data) {
-          console.log(data);
+          //console.log(data);
           resolve(data.matches[0].translation);
         })
         .catch(function(error) {
@@ -367,6 +454,7 @@ class App extends React.Component {
               ItemSeparatorComponent={this.renderSeparator}
             />
             <Text />
+            {this.state.isLoading && <ActivityIndicator size="large" color="#0000ff" />}
 
             <Portal>
               <Dialog
