@@ -7,3 +7,4 @@ npm-debug.*
 *.mobileprovision
 firebase.config.js
 translate.config.js
+.DS_Store
