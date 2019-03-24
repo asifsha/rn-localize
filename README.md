@@ -12,5 +12,5 @@ React Native App Localization Using Translation
 ## How to Use?
 Clone this repo, cd rn-localize, npm install, expo start
 
-##Note
+## Note
 The Input is only supported in English, you can view app in any language supported by mymemory.translated.net
