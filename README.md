@@ -2,6 +2,8 @@
 
 React Native App Localization Using Translation
 
+https://expo.io/@asifsh/rn-localize
+
 ![demo](https://raw.githubusercontent.com/asifsha/rn-localize/master/demo/translate.gif)
 
 ## Libraries Used

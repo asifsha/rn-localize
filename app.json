@@ -1,6 +1,7 @@
 {
   "expo": {
-    "name": "my local app",
+    "name": "Localization using translation at runtime",
+    "description": "Localization using translation at runtime",
     "slug": "rn-localize",
     "privacy": "public",
     "sdkVersion": "32.0.0",
